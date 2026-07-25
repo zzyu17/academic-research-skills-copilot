@@ -3,6 +3,11 @@ import path from "node:path";
 
 const PYTHON_MARKER = "ARS_PY_OK";
 const VALID_MODEL_TIERING = new Set(["economy", "quality-boost"]);
+export const ARS_EXTENSION_SENTINEL = "[ARS_EXTENSION_ACTIVE v3.17.0-copilot]";
+
+export function sessionStartContext() {
+  return `${ARS_EXTENSION_SENTINEL} ARS extension hooks and 16 slash commands are registered for this session.`;
+}
 
 function buildModelRoutingHint(commandTier, env, includeInvalidWarning) {
   const rawTiering = (env.ARS_MODEL_TIERING || "").trim();

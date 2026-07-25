@@ -14,6 +14,13 @@ metadata:
 
 # Deep Research — Universal Academic Research Agent Team
 
+## Bootstrap Preflight (MUST run first)
+
+Before routing, mode selection, tool use, or any user-visible response, check session
+context for the exact sentinel `[ARS_EXTENSION_ACTIVE v3.17.0-copilot]`. If present,
+continue silently. If absent, load `ars-bootstrap` and run its Extension Setup Check
+before doing anything else.
+
 Universal deep research tool — a domain-agnostic 13-agent team for rigorous academic research on any topic.
 
 **v2.4** adds writing quality improvements to the report compiler:

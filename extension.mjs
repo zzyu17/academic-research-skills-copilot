@@ -11,7 +11,11 @@ import { joinSession } from "@github/copilot-sdk/extension";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { createModelRoutingHint, runGuard } from "./scripts/copilot_runtime.mjs";
+import {
+  createModelRoutingHint,
+  runGuard,
+  sessionStartContext,
+} from "./scripts/copilot_runtime.mjs";
 
 const pluginRoot = dirname(fileURLToPath(import.meta.url));
 const modelRoutingHint = createModelRoutingHint();
@@ -216,11 +220,10 @@ const session = await joinSession({
   ],
 
   hooks: {
-    onSessionStart: async (input) => {
-      // Silent: no session.log() spam, no additionalContext that
-      // replaces the user prompt. All ARS routing/context is provided
-      // by ars-bootstrap/SKILL.md when the skill is actually invoked.
-      return {};
+    onSessionStart: async () => {
+      // Compact, non-user-visible proof that this exact extension version loaded.
+      // Functional skills use it to decide whether bootstrap repair is required.
+      return { additionalContext: sessionStartContext() };
     },
 
     onUserPromptSubmitted: async (input) => {

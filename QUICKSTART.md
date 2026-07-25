@@ -13,17 +13,21 @@ In your Copilot CLI session:
 
 ## Step 2: Set up the extension (first session only)
 
-When you start your next Copilot CLI session with an academic prompt, the `ars-bootstrap` skill auto-triggers. It will:
+When you invoke any ARS skill, it first checks for the current extension's silent
+session sentinel. If the extension is not active, the skill loads `ars-bootstrap`, which:
 
-1. Detect that the ARS extension is not yet registered
-2. Ask you to approve running `scripts/setup-copilot-extension.sh` (one bash permission)
-3. Create the extension symlink and `.bootstrapped` marker
-4. Reload extensions automatically — 16 slash commands (`/ars-full`, `/ars-plan`, etc.) are activated immediately within the same session
+1. Detects that the current ARS extension is not active
+2. Asks you to approve running `scripts/setup-copilot-extension.sh` (one bash permission)
+3. Creates or refreshes the extension symlink
+4. Reloads extensions automatically — 16 slash commands (`/ars-full`, `/ars-plan`, etc.) are activated immediately within the same session
 
-On all subsequent sessions, the bootstrap skill exits silently — routing rules are injected into agent context without any user-facing prompt.
+On subsequent sessions, the loaded extension supplies the sentinel and every skill's
+preflight continues silently. The `.bootstrapped` file is diagnostic only and never
+overrides this live check.
 
-> **After plugin update:** If you run `/plugin update academic-research-skills@academic-research-skills`, the extension symlink auto-follows the updated source files.
-To activate the updated `extension.mjs`, run `/restart` or start a new session with `/clear`.
+> **After plugin update:** Run `/restart` or start a new session with `/clear`. The next
+ARS invocation detects a missing or old-version sentinel, refreshes the extension symlink,
+and reloads the updated `extension.mjs`.
 
 ## Step 3: Start researching
 

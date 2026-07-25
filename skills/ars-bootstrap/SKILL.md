@@ -12,35 +12,30 @@ metadata:
 
 A suite of Copilot CLI skills for rigorous academic research, paper writing, peer review, and pipeline orchestration.
 
-## Extension Setup Check (run once, idempotent)
+## Extension Setup Check (MUST run before routing)
 
-**Step 0 — Silent exit gate (prevents repeated prompts):**
+Look for the exact session-context sentinel
+`[ARS_EXTENSION_ACTIVE v3.17.0-copilot]`.
 
-Check: does `~/.copilot/extensions/ars/.bootstrapped` exist?
+- If the sentinel is present, the current extension, hooks, and 16 slash commands are
+  registered. Continue silently.
+- If the sentinel is absent, repair registration before routing, mode selection, tool use,
+  or any user-visible response:
 
-- If YES → extension was previously registered. Exit silently — do NOT display any of the setup instructions below. The rest of this bootstrap skill (skills overview, routing rules, trigger keywords) should still be loaded into agent context, but no user-facing setup message is shown.
-- If NO → proceed to Step 1 below for first-time setup.
+  1. Obtain the **absolute source path** of this loaded
+     `skills/ars-bootstrap/SKILL.md` from the skill loader/tool result. Never resolve it
+     relative to the user's working directory.
+  2. Derive the plugin root by moving up three parents from that file:
+     `PLUGIN_DIR="$(dirname "$(dirname "$(dirname "$ARS_BOOTSTRAP_SKILL_FILE")")")"`
+     where `ARS_BOOTSTRAP_SKILL_FILE` is that absolute source path.
+  3. Run `bash "${PLUGIN_DIR}/scripts/setup-copilot-extension.sh"`. The script is
+     idempotent and refreshes missing, broken, or stale extension symlinks.
+  4. Call `extensions_reload({})`. The 16 slash commands and hooks become active in the
+     same session.
 
-**Step 1 — First-time setup (only when .bootstrapped is missing):**
-
-On first invocation, verify the ARS extension is registered:
-
-Check: does `~/.copilot/extensions/ars/extension.mjs` exist?
-  (use `test -L ~/.copilot/extensions/ars/extension.mjs` or equivalent)
-
-If the file does NOT exist:
-  1. Resolve the plugin install directory from the location of this SKILL.md:
-     `PLUGIN_DIR=$(dirname $(dirname $(readlink -f skills/ars-bootstrap/SKILL.md)))`
-  2. Run the setup script:
-     `bash "${PLUGIN_DIR}/scripts/setup-copilot-extension.sh"`
-  3. The setup script creates the symlink AND the `.bootstrapped` marker.
-  4. Call `extensions_reload({})` to reload extensions. The 16 slash commands are activated immediately within the same session.
-
-If the file EXISTS but `.bootstrapped` is missing (edge case: manual symlink):
-  1. Create the marker: `touch ~/.copilot/extensions/ars/.bootstrapped`
-  2. Then exit silently.
-
-After setup is complete and `.bootstrapped` exists, the bootstrap skill runs silently on every subsequent session — routing rules are injected into agent context without any user-facing prompt.
+The file `~/.copilot/extensions/ars/.bootstrapped` is diagnostic state only. Its presence
+must never bypass the sentinel check or symlink repair. Keep this check silent unless setup
+fails or Copilot requests permission to run the setup script.
 
 ## Skills Overview
 

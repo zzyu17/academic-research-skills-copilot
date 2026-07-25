@@ -1,13 +1,25 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  unlinkSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 
 import {
+  ARS_EXTENSION_SENTINEL,
   buildGuardPayload,
   createModelRoutingHint,
   findRealPython,
   modelRoutingHint,
   runGuard,
+  sessionStartContext,
 } from "../scripts/copilot_runtime.mjs";
 
 test("extension registers every upstream ARS command", () => {
@@ -31,6 +43,83 @@ test("extension registers every upstream ARS command", () => {
     "ars-revision-coach",
     "ars-unmark-read",
   ]);
+});
+
+test("session start announces the exact current extension sentinel", () => {
+  assert.equal(ARS_EXTENSION_SENTINEL, "[ARS_EXTENSION_ACTIVE v3.17.0-copilot]");
+  assert.match(sessionStartContext(), /^\[ARS_EXTENSION_ACTIVE v3\.17\.0-copilot\]/);
+  assert.match(sessionStartContext(), /16 slash commands/);
+
+  const extension = readFileSync(new URL("../extension.mjs", import.meta.url), "utf8");
+  assert.match(extension, /onSessionStart[\s\S]*sessionStartContext\(\)/);
+});
+
+test("marketplace exposes ars-bootstrap as an explicit installed skill", () => {
+  const marketplace = JSON.parse(
+    readFileSync(new URL("../.claude-plugin/marketplace.json", import.meta.url), "utf8"),
+  );
+  const skills = marketplace.plugins.find(
+    (plugin) => plugin.name === "academic-research-skills",
+  )?.skills;
+  assert.ok(skills?.includes("./skills/ars-bootstrap"));
+});
+
+test("every functional skill requires bootstrap preflight before routing or mode selection", () => {
+  const skillPaths = [
+    "../skills/deep-research/SKILL.md",
+    "../skills/academic-paper/SKILL.md",
+    "../skills/academic-paper-reviewer/SKILL.md",
+    "../skills/academic-pipeline/SKILL.md",
+  ];
+  for (const skillPath of skillPaths) {
+    const body = readFileSync(new URL(skillPath, import.meta.url), "utf8");
+    const preflight = body.indexOf("## Bootstrap Preflight (MUST run first)");
+    assert.notEqual(preflight, -1, `${skillPath} lacks the bootstrap preflight`);
+    assert.match(body, /\[ARS_EXTENSION_ACTIVE v3\.17\.0-copilot\]/);
+    assert.match(body, /load `ars-bootstrap` and run its Extension Setup Check/);
+
+    const routing = body.indexOf("Routing discipline");
+    const quickStart = body.indexOf("## Quick Start");
+    assert.ok(routing === -1 || preflight < routing, `${skillPath} routes before preflight`);
+    assert.ok(quickStart === -1 || preflight < quickStart, `${skillPath} selects a mode before preflight`);
+  }
+});
+
+test("bootstrap uses the live sentinel before idempotent cwd-independent repair", () => {
+  const bootstrap = readFileSync(
+    new URL("../skills/ars-bootstrap/SKILL.md", import.meta.url),
+    "utf8",
+  );
+  const sentinel = bootstrap.indexOf("[ARS_EXTENSION_ACTIVE v3.17.0-copilot]");
+  const absoluteSource = bootstrap.indexOf("absolute source path");
+  const setup = bootstrap.indexOf("setup-copilot-extension.sh");
+  assert.ok(sentinel !== -1 && absoluteSource > sentinel && setup > absoluteSource);
+  assert.doesNotMatch(bootstrap, /does `~\/\.copilot\/extensions\/ars\/\.bootstrapped` exist\?/);
+  assert.match(bootstrap, /\.bootstrapped.*diagnostic/si);
+});
+
+test("setup repairs missing and stale extension symlinks idempotently", () => {
+  const sandbox = mkdtempSync(join(tmpdir(), "ars-copilot-bootstrap-"));
+  const setup = new URL("../scripts/setup-copilot-extension.sh", import.meta.url);
+  const expected = realpathSync(new URL("../extension.mjs", import.meta.url));
+  const link = join(sandbox, ".copilot", "extensions", "ars", "extension.mjs");
+
+  try {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (attempt === 1) {
+        unlinkSync(link);
+        symlinkSync("/missing/stale-ars-extension.mjs", link);
+      }
+      const result = spawnSync("bash", [setup.pathname], {
+        encoding: "utf8",
+        env: { ...process.env, HOME: sandbox },
+      });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(realpathSync(link), expected);
+    }
+  } finally {
+    rmSync(sandbox, { recursive: true, force: true });
+  }
 });
 
 test("guard payload uses Copilot cwd and records the plugin root", () => {

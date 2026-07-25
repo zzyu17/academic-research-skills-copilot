@@ -8,7 +8,7 @@ This file is for ARS maintainers and contributors. It is NOT loaded into Copilot
 academic-research-skills/
 ├── copilot-main          ← Copilot CLI adaptations (this branch)
 ├── claude-code-main      ← Tracks upstream Imbad0202/academic-research-skills:main
-├── extension.mjs         ← Copilot CLI extension (13 slash commands + hooks)
+├── extension.mjs         ← Copilot CLI extension (16 slash commands + hooks)
 ├── package.json          ← Plugin metadata
 ├── skills/
 │   ├── ars-bootstrap/    ← Session-start bootstrap (replaces .claude/CLAUDE.md)
@@ -16,10 +16,10 @@ academic-research-skills/
 │   ├── academic-paper/   ← 12-agent paper writing skill
 │   ├── academic-paper-reviewer/ ← 7-agent peer review skill
 │   └── academic-pipeline/ ← 5-agent pipeline orchestrator
-├── agents/               ← 3 symlinks to deep-research/agents/
+├── agents/               ← 3 materialized mirrors of deep-research agents
 ├── shared/               ← Shared references, contracts, templates
 ├── scripts/              ← Python scripts + setup-copilot-extension.sh
-└── tests/                ← 4 Python tests
+└── tests/                ← Python suites + Copilot Node runtime tests
 ```
 
 ## Branch Strategy
@@ -30,6 +30,6 @@ academic-research-skills/
 ## Development
 
 - **No `gh ext install`** — Copilot CLI uses `/plugin marketplace add` + `/plugin install`
-- **Extension registration** — self-bootstrapping via `ars-bootstrap` skill + `scripts/setup-copilot-extension.sh`
+- **Extension registration** — every functional skill checks the versioned session sentinel and falls back to `ars-bootstrap` + `scripts/setup-copilot-extension.sh`
 - **Test in a separate Copilot CLI session** — this session is for development only
-- **`onPreToolUse` enforcement** — deferred to v3.10 parity (same posture as upstream)
+- **`onPreToolUse` enforcement** — active for workspace/plugin-root write scope; Copilot's hook schema still lacks per-agent identity for Bucket A fencing

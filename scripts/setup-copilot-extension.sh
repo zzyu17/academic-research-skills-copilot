@@ -4,7 +4,7 @@
 # Registers the ARS extension for Copilot CLI slash commands & hooks.
 # Idempotent — safe to run multiple times.
 # Creates: ~/.copilot/extensions/ars/extension.mjs (symlink)
-#           ~/.copilot/extensions/ars/.bootstrapped (marker)
+#           ~/.copilot/extensions/ars/.bootstrapped (diagnostic target record)
 # =============================================================================
 
 set -euo pipefail
@@ -25,9 +25,9 @@ fi
 mkdir -p "$EXT_DIR"
 ln -sf "$EXT_FILE" "${EXT_DIR}/extension.mjs"
 
-# Marker file: suppresses repeated bootstrap prompts after setup is complete.
-# ars-bootstrap checks for this file and exits silently when it exists.
-touch "${EXT_DIR}/.bootstrapped"
+# Diagnostic record only. Live registration is proved by the versioned
+# onSessionStart sentinel, never by this file's presence.
+printf '%s\n' "$EXT_FILE" > "${EXT_DIR}/.bootstrapped"
 
 echo "ARS extension registered at ${EXT_DIR}"
 echo "→ Symlink: ${EXT_DIR}/extension.mjs → ${EXT_FILE}"

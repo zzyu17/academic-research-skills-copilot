@@ -16,6 +16,13 @@ metadata:
 
 # Academic Pipeline v3.15.0 — Full Academic Research Workflow Orchestrator
 
+## Bootstrap Preflight (MUST run first)
+
+Before routing, mode selection, tool use, or any user-visible response, check session
+context for the exact sentinel `[ARS_EXTENSION_ACTIVE v3.17.0-copilot]`. If present,
+continue silently. If absent, load `ars-bootstrap` and run its Extension Setup Check
+before doing anything else.
+
 A lightweight orchestrator that manages the complete academic pipeline from research exploration to final manuscript. It does not perform substantive work — it only detects stages, recommends modes, dispatches skills, manages transitions, and tracks state.
 
 > **Routing discipline (v3.9.2):** see `skills/ars-bootstrap/SKILL.md` "Routing Discipline (v3.9.2)" + `shared/references/intent_clarification_protocol.md` for cross-skill routing rules. This skill assumes routing has already settled — ambiguous cross-phase materials should have been clarified upstream.

@@ -15,6 +15,13 @@ metadata:
 
 # Academic Paper — Academic Paper Writing Agent Team
 
+## Bootstrap Preflight (MUST run first)
+
+Before routing, mode selection, tool use, or any user-visible response, check session
+context for the exact sentinel `[ARS_EXTENSION_ACTIVE v3.17.0-copilot]`. If present,
+continue silently. If absent, load `ars-bootstrap` and run its Extension Setup Check
+before doing anything else.
+
 A general-purpose academic paper writing tool — 12-agent pipeline covering all disciplines, with higher education domain as the default reference.
 
 **v2.5** adds two writing quality features:
