@@ -40,10 +40,27 @@ export function createModelRoutingHint(envProvider = () => process.env) {
   };
 }
 
+function parseToolArgs(toolArgs) {
+  if (toolArgs && typeof toolArgs === "object" && !Array.isArray(toolArgs)) {
+    return toolArgs;
+  }
+  if (typeof toolArgs === "string") {
+    try {
+      const parsed = JSON.parse(toolArgs);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch {
+      // Preserve fail-closed guard behavior for malformed structured-tool input.
+    }
+  }
+  return {};
+}
+
 export function buildGuardPayload(input, pluginRoot) {
   return {
     tool_name: input.toolName,
-    tool_input: input.toolArgs || {},
+    tool_input: parseToolArgs(input.toolArgs),
     cwd: input.cwd || process.cwd(),
     plugin_root: pluginRoot,
   };

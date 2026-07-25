@@ -48,6 +48,33 @@ test("guard payload uses Copilot cwd and records the plugin root", () => {
   );
 });
 
+test("guard payload parses Copilot CLI serialized tool arguments", () => {
+  assert.deepEqual(
+    buildGuardPayload(
+      {
+        cwd: "/work/project",
+        toolName: "edit",
+        toolArgs: JSON.stringify({
+          path: "paper.md",
+          old_str: "before",
+          new_str: "after",
+        }),
+      },
+      "/plugins/ars",
+    ),
+    {
+      cwd: "/work/project",
+      plugin_root: "/plugins/ars",
+      tool_input: {
+        path: "paper.md",
+        old_str: "before",
+        new_str: "after",
+      },
+      tool_name: "edit",
+    },
+  );
+});
+
 test("valid ARS_MODEL_TIERING suppresses legacy blanket model ids", () => {
   const hint = modelRoutingHint("architect", {
     ARS_MODEL_TIERING: "economy",
