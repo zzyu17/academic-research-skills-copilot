@@ -601,3 +601,4 @@ These files exist only in `copilot-main` and must never be overwritten by a bulk
 |---|---------------|---------------|------------------|----------------|--------|-----------------|
 | 1 | v3.9.4.2 | copilot-main | — (initial) | — | — | Initial Copilot CLI port |
 | 2 | v3.11.1 | copilot-main | `121f904` | `7e124c7` | 6 phases | 20 of 21 (1 skipped: `announce-ars-loaded.sh`) |
+| 3 | v3.17.0 | copilot-main | `7e124c7` | `039d94f` | 5 execution phases + corrective follow-ups | 12 release areas; Claude-only launchers omitted and runtime behavior adapted to `ars-bootstrap` + `extension.mjs` |
